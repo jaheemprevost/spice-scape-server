@@ -1,5 +1,5 @@
 // Creates and exports custom error class.
-class CustomAPIError extends error {
+class CustomAPIError extends Error {
   constructor(message) {
     super(message);
   }

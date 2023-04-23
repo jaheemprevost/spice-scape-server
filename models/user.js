@@ -24,7 +24,7 @@ const userSchema = mongoose.Schema({
   },
   biography: {
     type: String,
-    minLength: 50,
+    minLength: 49,
     maxLength: 250,
     default: 'The backstory of this user is yet to be revealed.',
     required: true

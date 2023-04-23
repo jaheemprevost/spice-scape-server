@@ -1,22 +1,36 @@
+const Recipe = require('../models/recipe');
+const User = require('../models/user');
+const Comment = require('../models/comment');
+const {commentCreationSchema, commentRevisionValidator} = require('../utils/joi');
+const {BadRequestError, NotFoundError, UnauthenticatedError} = require('../errors');
+
+
+// Retrieves all comments from database and serves them.
 const getComments = async (req, res) => {
-  res.send('All comments under a goes here.');
-}; 
+  const comments = await Comment.find({});
 
-const createComment = async (req, res) => {
-  res.send('Create comment here.');
+  if (comments.length < 1) {
+    return res.status(200).json({message: "There aren't any comments yet."});
+  }
+
+  res.status(200).json({message: 'Success', comments});
+};
+
+// Retrieves a specific comment from database and serve it.
+const getComment = async(req, res) => {
+  const {commentId} = req.params;
+
+  const comment = await Comment.findOne({_id: commentId});
+  
+   // If recipe does not exist throw not found error.
+   if (!comment) {
+    throw new NotFoundError('The comment you are looking for does not exist.');
+  }
+
+  res.status(200).json({message: 'Success', comment});
 }
-
-const editComment = async (req, res) => {
-  res.send('Edit comment here.')
-};
-
-const deleteComment = async (req, res) => {
-  res.send('Delete your comment here.');
-};
 
 module.exports = {
   getComments, 
-  createComment,
-  editComment,
-  deleteComment
+  getComment,
 };

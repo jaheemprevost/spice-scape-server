@@ -2,6 +2,7 @@ require('dotenv').config();
 require('express-async-errors');
 const express = require('express');
 const connectDB = require('./db/connect');
+const errorHandlerMiddleware = require('./middleware/error-handler');
 
 // Api routes
 const authRoutes = require('./routes/auth');
@@ -16,7 +17,7 @@ const xss = require('xss-clean');
 
 const app = express();
 
-app.set('trust proxy', '127.0.0.1');
+app.set('trust proxy', '127.0.0.1'); 
 
 // Enabling use of security packages
 app.use(helmet());
@@ -33,7 +34,11 @@ app.use(express.urlencoded({extended : false}));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/recipes', recipeRoutes);
-app.use('/api/v1/recipes/:recipeId', commentRoutes);
+app.use('/api/v1/comments', commentRoutes);
+
+// Middleware
+
+app.use(errorHandlerMiddleware);
 
 // Establishes connection with mongo and runs server on designated port. 
 const start = () => {

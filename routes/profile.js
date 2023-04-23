@@ -13,9 +13,9 @@ const {
   unfavoriteRecipe
 } = require('../controllers/profile');
 
-router.route('/:id').get(getProfile).patch(editProfile).delete(deleteProfile);
-router.route('/:id/followers').get(getFollowers);
-router.route('/:id/following').get(getFollowing);
-router.route('/:id/follow').post(followUser).delete(unfollowUser);
+router.route('/:profileId').get(getProfile).patch(editProfile).delete(deleteProfile);
+router.route('/:profileId/followers').get(getFollowers);
+router.route('/:profileId/following').get(getFollowing);
+router.route('/:profileId/follow').post(followUser).delete(unfollowUser);
  
 module.exports = router;
