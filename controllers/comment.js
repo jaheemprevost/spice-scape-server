@@ -19,11 +19,11 @@ const getComments = async (req, res) => {
 // Retrieves a specific comment from database and serve it.
 const getComment = async(req, res) => {
   const {commentId} = req.params;
-
+  console.log(commentId)
   const comment = await Comment.findOne({_id: commentId});
-  
+  console.log(comment);
    // If recipe does not exist throw not found error.
-   if (!comment) {
+  if (!comment) {
     throw new NotFoundError('The comment you are looking for does not exist.');
   }
 

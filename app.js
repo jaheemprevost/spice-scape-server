@@ -1,7 +1,9 @@
 require('dotenv').config();
 require('express-async-errors');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./db/connect');
+const authenticationMiddleware = require('./middleware/authentication');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
 // Api routes
@@ -24,17 +26,17 @@ app.use(helmet());
 app.use(xss())
 app.use(cors());
 
-// Allows for JSON and form data to be parsed into the body of incoming requests
-
+// Parses JSON, form data, and cookies into request object
 app.use(express.json());
 app.use(express.urlencoded({extended : false}));
+app.use(cookieParser());
 
 // routes
 
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/profile', profileRoutes);
-app.use('/api/v1/recipes', recipeRoutes);
-app.use('/api/v1/comments', commentRoutes);
+app.use('/api/v1/profile', authenticationMiddleware, profileRoutes);
+app.use('/api/v1/recipes', authenticationMiddleware,recipeRoutes);
+app.use('/api/v1/comments', authenticationMiddleware, commentRoutes);
 
 // Middleware
 

@@ -18,11 +18,8 @@ const getProfile = async (req, res) => {
 
 // Edit the user profile associated with the specific request parameter.
 const editProfile = async (req, res) => {
-  const { profileId } = req.params;
-
-  // Temporary user account created to test controllers before authentication is implemented
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user; 
+  const { profileId } = req.params; 
 
   const user = await User.findOne({_id: profileId});
 
@@ -52,8 +49,7 @@ const editProfile = async (req, res) => {
 };
 
 const deleteProfile = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;  
   const { profileId } = req.params;
 
   const user = await User.findOne({_id: profileId});
@@ -71,12 +67,11 @@ const deleteProfile = async (req, res) => {
   await User.updateMany({},{$pull: {followedCooks: user._id}});
   await User.findOneAndDelete({_id: profileId});
 
-  res.status(200).json({message: 'Success', user});
+  res.clearCookie('token', {httpOnly: true, secure: false});
+  res.redirect('/api/v1/auth/login');
 };
 
-const getFollowers = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+const getFollowers = async (req, res) => { 
   const { profileId } = req.params;
 
   /* Instructions on how to populate various fields inside of document. */
@@ -108,9 +103,7 @@ const getFollowers = async (req, res) => {
   }
 }
 
-const getFollowing = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+const getFollowing = async (req, res) => { 
   const { profileId } = req.params;
 
    /* Instructions on how to populate various fields inside of document. */
@@ -142,16 +135,15 @@ const getFollowing = async (req, res) => {
   }
 };
 
-const followUser = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+const followUser = async (req, res) => { 
+  const { userId } = req.user;
   const { profileId } = req.params;
 
   const user = await User.findOne({_id: profileId});
 
   // If user doesn't exist throw not found error.
   if (!user) {
-    throw new NotFoundError('The recipe you are looking for does not exist.');
+    throw new NotFoundError('This user does not exist');
   } 
 
   // If profile belongs to current user throw unauthorized error.
@@ -171,15 +163,14 @@ const followUser = async (req, res) => {
 }
 
 const unfollowUser = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;
   const { profileId } = req.params;
 
   const user = await User.findOne({_id: profileId});
 
   // If user doesn't exist throw not found error.
   if (!user) {
-    throw new NotFoundError('The recipe you are looking for does not exist.');
+    throw new NotFoundError('This user does not exist');
   } 
 
   // If profile belongs to current user throw unauthorized error.
