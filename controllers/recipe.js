@@ -71,10 +71,8 @@ const getRecipeComments = async (req, res) => {
 
 // Validates user input data and creates document in database. 
 const createRecipe = async (req, res) => {
-  // Hardcoded user id to test controllers before authentication is implemented
-  // req.user = {userId: 'userIdForTesting'};
-  // const {userId} = req.user;
-  // req.body.createdBy = userId;
+  const { userId } = req.user;
+  req.body.createdBy = userId;
 
   // Validates user input.
   const {value, error} = recipeCreationSchema.validate(req.body);
@@ -94,8 +92,8 @@ const createRecipe = async (req, res) => {
 }
 
 const createComment = async (req, res) => { 
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;
+  req.body.madeBy = userId;
 
   const {recipeId} = req.params;
   req.body.parentPost = recipeId;
@@ -124,8 +122,7 @@ const createComment = async (req, res) => {
 };
 
 const editRecipeData = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user; 
   const { recipeId, commentId } = req.query;
 
   // If recipeId is absent or if it's present as an empty string throw an error.
@@ -195,8 +192,7 @@ const editRecipeData = async (req, res) => {
 
 
 const deleteRecipeData = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;
   const { recipeId, commentId } = req.query;
 
   // If recipeId is absent or if it's present as an empty string throw an error.
@@ -257,8 +253,7 @@ const deleteRecipeData = async (req, res) => {
 };
 
 const favoriteRecipe = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;
   const { recipeId } = req.params;
 
   const recipe = await Recipe.findOne({_id: recipeId});
@@ -286,8 +281,7 @@ const favoriteRecipe = async (req, res) => {
 }
 
 const unfavoriteRecipe = async (req, res) => {
-  // req.user = {userId: 'userIdForTesting'}; 
-  // const {userId} = req.user; 
+  const { userId } = req.user;
   const { recipeId } = req.params;
 
   const recipe = await Recipe.findOne({_id: recipeId});

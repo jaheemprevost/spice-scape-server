@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
- 
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
 const userSchema = mongoose.Schema({
   username: {
     type: String,
@@ -35,5 +37,20 @@ const userSchema = mongoose.Schema({
   followedCooks: [{type: mongoose.Types.ObjectId, ref: 'User'}],
   followers: [{type: mongoose.Types.ObjectId, ref: 'User'}] 
 });
+
+userSchema.pre('save', async function() {
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+userSchema.methods.createJWT = function() {
+  return jwt.sign({userId: this._id, username: this.username}, process.env.JWT_SECRET, {expiresIn: process.env.EXPIRES_IN})
+};
+
+userSchema.methods.comparePassword = async function(inputtedPassword) {
+  const successfulMatch = await bcrypt.compare(inputtedPassword, this.password);
+
+  return successfulMatch;
+};
 
 module.exports = mongoose.model('User', userSchema);
