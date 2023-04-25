@@ -27,8 +27,8 @@ app.use(xss())
 app.use(cors());
 
 // Parses JSON, form data, and cookies into request object
-app.use(express.json());
-app.use(express.urlencoded({extended : false}));
+app.use(express.json({limit: '20MB'}));
+app.use(express.urlencoded({extended : true, limit: '20MB'}));
 app.use(cookieParser());
 
 // routes

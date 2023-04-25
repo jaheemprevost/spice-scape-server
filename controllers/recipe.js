@@ -1,4 +1,5 @@
 const {BadRequestError, NotFoundError, UnauthenticatedError} = require('../errors');
+const { uploadImage, deleteImage } = require('../utils/cloudinary');
 const {recipeCreationSchema, recipeRevisionSchema, commentCreationSchema, commentRevisionValidator} = require('../utils/joi');
 const Recipe = require('../models/recipe');
 const Comment = require('../models/comment');
@@ -73,7 +74,7 @@ const getRecipeComments = async (req, res) => {
 const createRecipe = async (req, res) => {
   const { userId } = req.user;
   req.body.createdBy = userId;
-
+  
   // Validates user input.
   const {value, error} = recipeCreationSchema.validate(req.body);
  
@@ -81,6 +82,17 @@ const createRecipe = async (req, res) => {
   if (error) {
     const message = error.details[0].message;
     throw new BadRequestError(message);
+  } 
+  
+  
+  if (value.recipeImage) {
+    const base64String = value.recipeImage;  
+    const imageData = await uploadImage(base64String, 'recipes');
+
+    value.recipeImage = {
+      url: imageData.secure_url,
+      publicId: imageData.public_id 
+    };
   }
 
   const recipe = await Recipe.create(value);
@@ -142,20 +154,33 @@ const editRecipeData = async (req, res) => {
     // If recipe doesn't exist throw 404 not found error.
     if (!recipe) {
       throw new NotFoundError('The recipe you are looking for does not exist.');
-    } 
-
-    // Validates user input
-    const {value, error} = recipeRevisionSchema.validate(req.body);
-
-    //If input validation fails throw 400 bad request error.
-    if (error) {
-      const message = error.details[0].message;
-      throw new BadRequestError(message); 
-    }
+    }  
 
     // If recipe wasn't created by current user throw 401 unauthorized error.
     if (recipe.createdBy.toString() !== userId) { 
       throw new UnauthenticatedError('You are not authorized to modify this recipe');
+    }
+
+    // Validates user input
+    const {value, error} = recipeRevisionSchema.validate(req.body);
+
+    // If input validation fails throw 400 bad request error.
+    if (error) {
+       const message = error.details[0].message;
+       throw new BadRequestError(message); 
+    }
+    
+    const base64Uri = value.recipeImage;  
+    const imageData = await uploadImage(base64Uri, 'recipes');
+
+    value.recipeImage = {
+      url: imageData.secure_url,
+      publicId: imageData.public_id 
+    };
+ 
+    // Delete previous recipe image stored on cloudinary if it isn't the default.
+    if (recipe.recipeImage.publicId !== '123') {
+      deleteImage(recipe.recipeImage.publicId);
     }
 
     // Update only the specific values provided by the user. 
@@ -163,6 +188,7 @@ const editRecipeData = async (req, res) => {
     await recipe.save({new: true, runValidators: true});
     return res.status(200).json({message: 'Success', recipe});
   } 
+
 
   // Else edit the specified comment.
   const comment = await Comment.findOne({_id: commentId});
@@ -218,6 +244,11 @@ const deleteRecipeData = async (req, res) => {
     // If recipe wasn't created by current user throw 401 unauthorized error.
     if (recipe.createdBy.toString() !== userId) { 
       throw new UnauthenticatedError('You are not authorized to modify this recipe');
+    }
+
+    // Delete previous recipe image stored on cloudinary if it isn't the default.
+    if (recipe.recipeImage.publicId !== '123') {
+      deleteImage(recipe.recipeImage.publicId);
     }
 
     await Recipe.findOneAndDelete({_id: recipeId});

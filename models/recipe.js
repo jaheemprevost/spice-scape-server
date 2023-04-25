@@ -31,9 +31,16 @@ const recipeSchema = mongoose.Schema({
     required: [true, 'Please provide the steps for the recipe']
   },
   recipeImage: {
-    type: String,
-    default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1682023030/default-dish_ciooaz.png',
-    required: true
+    publicId: {
+      type: 'String',
+      default: '123',
+      required: true
+    },
+    url: {
+      type: 'String',
+      default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1682023030/default-dish_ciooaz.png',
+      required: true
+    }
   },
   comments: [{type: mongoose.Types.ObjectId, ref: 'Comment'}]
 });
