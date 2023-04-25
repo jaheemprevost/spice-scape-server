@@ -20,9 +20,16 @@ const userSchema = mongoose.Schema({
     required: [true, 'Please enter a password']
   },
   profileImage: {
-    type: String,
-    default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1682015580/default-user_re7kkp.png',
-    required: [true, 'Please provide image url']
+    publicId: {
+      type: 'String',
+      default: '321',
+      required: true
+    },
+    url: {
+      type: 'String',
+      default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1682015580/default-user_re7kkp.png',
+      required: true
+    }
   },
   biography: {
     type: String,

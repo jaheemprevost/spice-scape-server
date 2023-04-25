@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const { profileRevisionSchema } = require('../utils/joi');
+const { uploadImage, deleteImage } = require('../utils/cloudinary');
 const {NotFoundError, BadRequestError, UnauthenticatedError}= require('../errors');
 
 // Get specific profile associated with id in the request parameters.
@@ -41,6 +42,18 @@ const editProfile = async (req, res) => {
     const message = error.details[0].message;
     throw new BadRequestError(message);
   }  
+  const base64Uri = value.profileImage;  
+  const imageData = await uploadImage(base64Uri, 'profiles');
+
+  value.profileImage = {
+    url: imageData.secure_url,
+    publicId: imageData.public_id 
+  }; 
+
+  // Delete previous profile image stored on cloudinary.
+  if (user.profileImage.publicId !== '321') {
+    deleteImage(user.profileImage.publicId);
+  }
 
   user.set(value);
   await user.save({new: true, runValidators: true});
@@ -63,6 +76,11 @@ const deleteProfile = async (req, res) => {
     throw new UnauthenticatedError('You are not authorized to modify this profile')
   }
 
+  // Delete previous profile image stored on cloudinary.
+  if (user.profileImage.publicId !== '321') {
+    deleteImage(user.profileImage.publicId);
+  }
+  
   await User.updateMany({},{$pull: {followers: user.id_}});
   await User.updateMany({},{$pull: {followedCooks: user._id}});
   await User.findOneAndDelete({_id: profileId});

@@ -2,6 +2,7 @@ const Joi = require('joi');
 
 // Joi Schemas used to validate user input. 
 
+// Validation for when creating a user profile.
 const userCreationSchema = Joi.object({
   username: Joi.string().regex(/^[a-zA-Z0-9]+$/).min(6).max(16).required().trim().messages({
     'string.pattern.base': 'Only alphanumeric characters are allowed.',
@@ -24,6 +25,7 @@ const userCreationSchema = Joi.object({
   })
 }).options({ abortEarly: false });;
 
+// Validation for when logging in a user.
 const userLoginSchema = Joi.object({
   email: Joi.string().email().required().trim().messages({
     'string.pattern.base': 'Please enter a valid email',
@@ -39,6 +41,7 @@ const userLoginSchema = Joi.object({
   })
 });
 
+// Validation for when editing a user profile.
 const profileRevisionSchema = Joi.object({ 
   username: Joi.string().regex(/^[a-zA-Z0-9]+$/).min(6).max(16).required().trim().messages({
     'string.pattern.base': 'Only alphanumeric characters are allowed.',
@@ -54,11 +57,13 @@ const profileRevisionSchema = Joi.object({
     'string.max': 'Recipe description should have at most 250 characters',
     'any.required': 'A bio for your profile is required'
   }),
-  profileImage: Joi.string().required().messages({
-    'any.required': 'An image for your profile is required'
-  }) 
+  profileImage: Joi.string().dataUri().required().messages({
+    'string.empty': 'Please provide a valid data Uri',
+    'any.required': 'An image for yor user profile is required'
+  })
 });
 
+// Validation when creating a new recipe.
 const recipeCreationSchema = Joi.object({
   createdBy: Joi.string().regex(/^[a-zA-Z0-9]+$/).min(24).max(24).required().trim().messages({
     'string.pattern.base': 'Only alphanumeric characters are allowed.',
@@ -95,8 +100,12 @@ const recipeCreationSchema = Joi.object({
     'string.max': 'Recipe steps should have at most 800 characters',
     'any.required': 'Steps for your recipe are required'
   }),
+  recipeImage: Joi.string().dataUri().messages({
+    'string.empty': 'Please provide a base64-encoded string'
+  })
 });
 
+// Validation for when editing a recipe.
 const recipeRevisionSchema = Joi.object({
   recipeTitle:Joi.string().regex(/^[a-zA-Z0-9 \-,.!?:;\(\)]+$/).min(3).max(211).required().trim().messages({
     'string.pattern.base': 'Only alphanumeric characters and spaces are allowed.',
@@ -126,11 +135,13 @@ const recipeRevisionSchema = Joi.object({
     'string.max': 'Recipe steps should have at most 800 characters',
     'any.required': 'Steps for your recipe are required'
   }),
-  recipeImage: Joi.string().required().messages({
+  recipeImage: Joi.string().dataUri().required().messages({
+    'string.empty': 'Please provide a valid data Uri',
     'any.required': 'An image for yor recipe is required'
   })
 });
 
+// Validation for when creating a new comment.
 const commentCreationSchema = Joi.object({
   parentPost: Joi.string().regex(/^[a-zA-Z0-9]+$/).min(24).max(24).required().trim().messages({
     'string.pattern.base': 'Only alphanumeric characters are allowed.',
@@ -155,6 +166,7 @@ const commentCreationSchema = Joi.object({
   })
 });
 
+// Validation for when editing a comment.
 const commentRevisionValidator = Joi.string().regex(/^[a-zA-Z0-9 \-,.!?:;\(\)]+$/).min(3).max(150).required().trim().messages({
   'string.pattern.base': 'Only alphanumeric characters and spaces are allowed.',
   'string.empty': 'Please provide text for your comment',
