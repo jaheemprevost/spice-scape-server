@@ -19,7 +19,7 @@ const xss = require('xss-clean');
 
 const app = express();
 
-app.set('trust proxy', '127.0.0.1'); 
+app.set('trust proxy', 1); 
 
 // Enabling use of security packages
 app.use(helmet());

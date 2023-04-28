@@ -1,6 +1,7 @@
 const User = require('../models/user');
+const jwt = require('jsonwebtoken');
 const { userCreationSchema, userLoginSchema } = require('../utils/joi');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError, NotFoundError, UnauthenticatedError } = require('../errors');
 const getRegister = async (req, res) => { 
   res.send('This is the registration page.');
 }
@@ -13,14 +14,13 @@ const getLogin = async (req, res) => {
 const registerUser = async (req, res) => {
   const {value, error} = userCreationSchema.validate(req.body);
 
-  if (error) {
-    const message = error.details[0].message;
-    throw new BadRequestError(message);
+  if (error) { 
+    throw new BadRequestError(error);
   }
 
   const user = await User.create(value);
 
-  res.redirect('/api/v1/auth/login');
+  res.status(201).json({message: 'User has been successfully registered.'});
 }
 
 const loginUser = async (req, res) => {
@@ -43,14 +43,46 @@ const loginUser = async (req, res) => {
     throw new BadRequestError('Invalid email or password');
   }
 
-  const token = user.createJWT(); 
+  const accessToken = user.createAccessToken(); 
+  const refreshToken = user.createRefreshToken(); 
 
-  res.cookie('token', token, {httpOnly: true, secure: false, maxAge: 86400000});
-  res.status(200).json({user: {name: user.username}}); 
+  res.cookie('refreshToken', refreshToken,  {httpOnly: true,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
+
+  res.status(200).json({user: {
+    name: user.username,
+    profileImage: user.profileImage,
+    biography: user.biography
+  }, accessToken}); 
 }
 
-const logoutUser = async (req, res) => {
-  res.clearCookie('token', {httpOnly: true, secure: false});
+const refreshAccessToken = async(req, res) => {
+  const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    throw new UnauthenticatedError('Authentication failed');
+  }
+  
+  const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET); 
+
+  const foundUser = await User.findOne({_id: payload.userId});
+
+  if (!foundUser) {
+    throw new NotFoundError('This user does not exist');
+  }
+
+  const accessToken = foundUser.createAccessToken(); 
+  
+  res.status(200).json({accessToken});
+};
+
+const logoutUser = async (req, res) => { 
+  const cookies = req.cookies;
+
+  if (!cookies.refreshToken) { 
+    return res.status(204).json({message: 'No cookie found'});
+  }
+
+  res.clearCookie('refreshToken', {httpOnly: true, secure: false,  sameSite: 'None'});
   res.redirect('/api/v1/auth/login');
 };
 
@@ -59,5 +91,6 @@ module.exports = {
   getLogin,
   registerUser,
   loginUser,
+  refreshAccessToken,
   logoutUser
 };

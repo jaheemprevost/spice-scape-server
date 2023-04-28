@@ -2,14 +2,16 @@ const jwt = require('jsonwebtoken');
 const { UnauthenticatedError } = require('../errors');
 
 const authMiddleware = (req, res, next) => {
-  const {token} = req.cookies;
-  
-  if (!token) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new UnauthenticatedError('Authentication invalid');
   }
 
+  const accessToken = authHeader.split(' ')[1];
+
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     
     req.user = {userId: payload.userId};
 
