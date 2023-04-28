@@ -8,6 +8,7 @@ const {
   getLogin,
   registerUser,
   loginUser,
+  refreshAccessToken,
   logoutUser
 }
 = require('../controllers/auth');
@@ -23,6 +24,7 @@ const limiter = rateLimit({
 
 router.route('/register').get(getRegister).post(limiter, registerUser);
 router.route('/login').get(getLogin).post(limiter, loginUser);
+router.route('/refresh').post(refreshAccessToken);
 router.route('/logout').post(authenticationMiddleware, logoutUser);
 
 module.exports = router;

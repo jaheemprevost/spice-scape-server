@@ -8,7 +8,7 @@ const userCreationSchema = Joi.object({
     'string.pattern.base': 'Only alphanumeric characters are allowed.',
     'string.empty': 'Please enter a username',
     'string.min': 'Username should have at least 6 characters',
-    'string.max': 'Username id should have at most 16 characters',
+    'string.max': 'Username should have at most 16 characters',
     'any.required': 'Username is required'
   }),
   email: Joi.string().email().required().trim().messages({
