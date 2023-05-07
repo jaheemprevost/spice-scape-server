@@ -12,6 +12,10 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   if (err.code && err.code === 11000) {
     customError.message = `Duplicate value entered for ${err.keyValue} field, please choose another value.`;
 
+    if ('email' in err.keyPattern) {
+      customError.message = 'User has already registered';
+    }
+
     customError.statusCode = 400;
   }
 

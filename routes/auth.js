@@ -4,8 +4,6 @@ const rateLimit = require('express-rate-limit');
 const authenticationMiddleware = require('../middleware/authentication');
 
 const {
-  getRegister,
-  getLogin,
   registerUser,
   loginUser,
   refreshAccessToken,
@@ -22,8 +20,8 @@ const limiter = rateLimit({
   legacyHeaders: false
 })
 
-router.route('/register').get(getRegister).post(limiter, registerUser);
-router.route('/login').get(getLogin).post(limiter, loginUser);
+router.route('/register').post(limiter, registerUser);
+router.route('/login').post(limiter, loginUser);
 router.route('/refresh').post(refreshAccessToken);
 router.route('/logout').post(authenticationMiddleware, logoutUser);
 

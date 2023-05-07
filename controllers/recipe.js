@@ -7,27 +7,57 @@ const User = require('../models/user');
 
 // Retrieves all recipes from database and serves them to frontend.
 const getRecipes = async (req, res) => {
-  const recipes = await Recipe.find({});
+
+  /* Instructions on how to populate various fields and even nested fields inside of document. */
+  const populateOptions = {
+    path: 'createdBy',
+    select: 'username profileImage _id' 
+  };
+
+  const recipes = await Recipe.find({}).populate(populateOptions);
 
   if (recipes.length < 1) {
     return res.status(200).json({message: "There aren't any recipes. Be the first to post one!"}); 
   }
 
-  res.status(200).json({message: 'Success', recipes});
+  const recipeTiles = recipes.map(recipe => {
+    return {
+      recipeTitle: recipe.recipeTitle,
+      recipeImage: recipe.recipeImage.url,
+      createdBy: recipe.createdBy._id,
+      author: recipe.createdBy.username,
+      authorImage: recipe.createdBy.profileImage.url,
+      recipeId: recipe._id
+    }
+  }); 
+  
+  res.status(200).json({recipeTiles});
 }; 
 
 // Retrieves a single recipe based on extracted id parameter.
 const getRecipe = async (req, res) => {
+  const { userId } = req.user;
   const {recipeId} = req.params;
 
-  const recipe = await Recipe.findOne({_id: recipeId});
+  const populateOptions = {
+    path: 'createdBy',
+    select: 'username _id' 
+  };
+
+  const recipe = await Recipe.findOne({_id: recipeId}).populate(populateOptions);
   
   // If recipe does not exist throw not found error.
   if (!recipe) {
     throw new NotFoundError('The recipe you are looking for does not exist.');
   }
+  
+  const user = await User.findOne({_id: userId});
 
-  res.status(200).json({message: 'Success', recipe});
+  const isFavorite = user.favoriteRecipes.includes(recipeId);
+  const isOwnRecipe = user.recipes.includes(recipeId);
+  console.log(recipe);
+  
+  res.status(200).json({message: 'Success', recipe, isFavorite, isOwnRecipe});
 }; 
 
 const getRecipeComments = async (req, res) => {
@@ -57,7 +87,7 @@ const getRecipeComments = async (req, res) => {
       userInfo: {
         id: comment.madeBy._id,
         username: comment.madeBy.username,
-        profileImage: comment.madeBy.profileImage
+        profileImage: comment.madeBy.profileImage.url
       }
     };
   });
@@ -67,7 +97,7 @@ const getRecipeComments = async (req, res) => {
     return res.status(200).json({message: 'This recipe has no comments'});
   }
 
-  res.status(200).json({message: 'Success', comments});
+  res.status(200).json({comments});
 }
 
 // Validates user input data and creates document in database. 
@@ -100,7 +130,7 @@ const createRecipe = async (req, res) => {
   // Add reference id of recipe from user's list of created recipes.
   await User.updateOne({_id: userId}, {$push: { recipes: recipe._id }});
 
-  res.status(201).json({message: 'Success', recipe});
+  res.status(201).json({message: 'Recipe successfully created'});
 }
 
 const createComment = async (req, res) => { 
@@ -130,7 +160,7 @@ const createComment = async (req, res) => {
   await Recipe.findOneAndUpdate({_id: recipeId}, {$push: { comments: comment.id }});
   
   await User.findOneAndUpdate({_id: userId}, {$push: { comments: comment.id}});
-  res.status(200).json({message: 'Success', comment});
+  res.status(201).json({message: 'Comment successfully created'});
 };
 
 const editRecipeData = async (req, res) => {
@@ -186,7 +216,7 @@ const editRecipeData = async (req, res) => {
     // Update only the specific values provided by the user. 
     recipe.set(value);
     await recipe.save({new: true, runValidators: true});
-    return res.status(200).json({message: 'Success', recipe});
+    return res.status(200).json({message: 'Recipe successfully edited'});
   } 
 
 
@@ -213,7 +243,7 @@ const editRecipeData = async (req, res) => {
   comment.set({text: value});
   const result = await comment.save({new: true, runValidators: true});
   console.log(result);
-  res.status(200).json({message: 'Success', comment});
+  res.status(200).json({message: 'Comment successfully deleted'});
 };
 
 
@@ -256,7 +286,7 @@ const deleteRecipeData = async (req, res) => {
     // Remove reference id of recipe from user's list of created recipes.
     await User.updateOne({_id: userId}, {$pull: { recipes: recipeId }});
 
-    return res.status(200).json({message: 'Success', recipe});
+    return res.status(200).json({message: 'Recipe successfully deleted'});
   } 
 
   // Else delete the specified comment. 
@@ -280,7 +310,7 @@ const deleteRecipeData = async (req, res) => {
   // Remove reference id of comment from user's list of created comments.
   await User.updateOne({_id: userId}, {$pull: { comments: commentId }}); 
   
-  res.status(200).json({message: 'Success', comment}); 
+  res.status(200).json({message: 'Comment successfully deleted'}); 
 };
 
 const favoriteRecipe = async (req, res) => {
@@ -308,7 +338,7 @@ const favoriteRecipe = async (req, res) => {
 
   await User.updateOne({_id: userId}, {$push: { favoriteRecipes: recipeId }});
 
-  res.status(200).json({message: 'Success'});
+  res.status(200).json({message: 'Recipe favorited successfully'});
 }
 
 const unfavoriteRecipe = async (req, res) => {
@@ -336,7 +366,7 @@ const unfavoriteRecipe = async (req, res) => {
 
   await User.updateOne({_id: userId}, {$pull: { favoriteRecipes: recipeId }});
 
-  res.status(200).json({message: 'Success'});
+  res.status(200).json({message: 'Recipe unfavorited successfully'});
 };
 
 module.exports = {

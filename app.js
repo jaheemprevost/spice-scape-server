@@ -19,12 +19,15 @@ const xss = require('xss-clean');
 
 const app = express();
 
-app.set('trust proxy', 1); 
 
 // Enabling use of security packages
 app.use(helmet());
-app.use(xss())
-app.use(cors());
+app.use(xss());
+
+app.use(cors({
+  origin: '*',
+  credentials: true
+}));
 
 // Parses JSON, form data, and cookies into request object
 app.use(express.json({limit: '20MB'}));
