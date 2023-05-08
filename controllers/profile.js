@@ -43,15 +43,16 @@ const getProfile = async (req, res) => {
 
   const userData = {
     username: user.username,
-    profileImage: user.profileImage,
+    profileImage: user.profileImage.url,
     biography: user.biography,
     followerCount: user.followers.length,
     followingCount: user.followedCooks.length
   };
- 
+  
   const currentUser = await User.findOne({_id: userId});
 
   const isFollowing = currentUser.followedCooks.includes(profileId);
+ 
   res.status(200).json({user: userData, recipes, comments, isFollowing});
 };
 
