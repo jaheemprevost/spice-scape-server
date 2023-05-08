@@ -41,7 +41,13 @@ const loginUser = async (req, res) => {
   const accessToken = user.createAccessToken(); 
   const refreshToken = user.createRefreshToken(); 
 
-  res.cookie('refreshToken', refreshToken,  {httpOnly: false,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
+  res.cookie('refreshToken', refreshToken,  {
+    httpOnly: false,  
+    sameSite: 'None',
+    secure: true, 
+    maxAge: process.env.REFRESH_EXPIRES_IN,
+    domain: 'https://spice-scape-server.onrender.com'
+  });
 
   res.status(200).json({user: {
     name: user.username,
@@ -69,7 +75,13 @@ const refreshAccessToken = async(req, res) => {
   const accessToken = foundUser.createAccessToken(); 
   refreshToken = foundUser.createRefreshToken(); 
 
-  res.cookie('refreshToken', refreshToken,  {httpOnly: true,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
+  res.cookie('refreshToken', refreshToken,  {
+    httpOnly: true,  
+    sameSite: 'None',
+    secure: true, 
+    maxAge: process.env.REFRESH_EXPIRES_IN,
+    domain: 'https://spice-scape-server.onrender.com'
+  });
 
   res.status(200).json({accessToken});
 };
@@ -82,7 +94,12 @@ const logoutUser = async (req, res) => {
     return res.status(204).json({message: 'No cookie found'});
   }
 
-  res.clearCookie('refreshToken', {httpOnly: true, secure: false,  sameSite: 'None'});
+  res.clearCookie('refreshToken', {
+    httpOnly: true, 
+    secure: true,  
+    sameSite: 'None',
+    domain: 'https://spice-scape-server.onrender.com'
+  });
 
   res.status(200).json({message: 'User successfully logged out'});
 };
