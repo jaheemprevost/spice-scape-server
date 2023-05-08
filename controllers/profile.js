@@ -5,16 +5,55 @@ const {NotFoundError, BadRequestError, UnauthenticatedError}= require('../errors
 
 // Get specific profile associated with id in the request parameters.
 const getProfile = async (req, res) => {
+  const { userId } = req.user;
   const {profileId} = req.params;
 
-  const user = await User.findOne({_id: profileId});
+  const commentOptions = {
+    path: 'comments',
+    select: 'text madeBy',
+    populate: {
+      path: 'madeBy',
+      select: 'username profileImage _id'
+    } 
+  };
+
+  const user = await User.findOne({_id: profileId}).populate('recipes').populate(commentOptions);
 
   // If the user doesn't exist throw 404 not found error.
   if (!user) {
     throw new NotFoundError('This user does not exist.');
   }
 
-  res.status(200).json({message: 'Success', user});
+  const recipes = user.recipes.map(recipe => { 
+    return {
+      recipeTitle: recipe.recipeTitle,
+      recipeImage: recipe.recipeImage.url,
+      recipeId: recipe._id
+    }
+  });
+
+  const comments = user.comments.map(comment => {
+    return {
+      username: comment.madeBy.username,
+      profileImage: comment.madeBy.profileImage.url,
+      text: comment.text,
+      profileId: comment.madeBy._id 
+    }
+  });
+
+  const userData = {
+    username: user.username,
+    profileImage: user.profileImage.url,
+    biography: user.biography,
+    followerCount: user.followers.length,
+    followingCount: user.followedCooks.length
+  };
+  
+  const currentUser = await User.findOne({_id: userId});
+
+  const isFollowing = currentUser.followedCooks.includes(profileId);
+ 
+  res.status(200).json({user: userData, recipes, comments, isFollowing});
 };
 
 // Edit the user profile associated with the specific request parameter.
@@ -58,7 +97,7 @@ const editProfile = async (req, res) => {
   user.set(value);
   await user.save({new: true, runValidators: true});
 
-  res.status(200).json({message: 'Success', user});
+  res.status(200).json({message: 'Profile has been edited'});
 };
 
 const deleteProfile = async (req, res) => {
@@ -86,7 +125,7 @@ const deleteProfile = async (req, res) => {
   await User.findOneAndDelete({_id: profileId});
 
   res.clearCookie('token', {httpOnly: true, secure: false});
-  res.redirect('/api/v1/auth/login');
+  res.status(200).json({message: 'Profile has been deleted'});
 };
 
 const getFollowers = async (req, res) => { 
@@ -117,7 +156,7 @@ const getFollowers = async (req, res) => {
   if (followers.length < 1) {
     return res.status(200).json({message: 'This user has no followers'});
   } else {
-    res.status(200).json({message: 'Success', followers});
+    res.status(200).json({followers});
   }
 }
 
@@ -149,7 +188,7 @@ const getFollowing = async (req, res) => {
   if (followedCooks.length < 1) {
     return res.status(200).json({message: "This user isn't following anyone"});
   } else {
-    res.status(200).json({message: 'Success', followedCooks});
+    res.status(200).json({followedCooks});
   }
 };
 

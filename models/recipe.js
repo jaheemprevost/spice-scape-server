@@ -38,7 +38,7 @@ const recipeSchema = mongoose.Schema({
     },
     url: {
       type: 'String',
-      default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1682023030/default-dish_ciooaz.png',
+      default: 'https://res.cloudinary.com/dhscoasnw/image/upload/v1683047875/placeholder-dish_vklu6h.jpg',
       required: true
     }
   },

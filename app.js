@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./db/connect');
 const authenticationMiddleware = require('./middleware/authentication');
 const errorHandlerMiddleware = require('./middleware/error-handler');
+const PORT = process.env.PORT || 3000;
 
 // Api routes
 const authRoutes = require('./routes/auth');
@@ -19,12 +20,17 @@ const xss = require('xss-clean');
 
 const app = express();
 
-app.set('trust proxy', 1); 
 
+// Whitelisted domains
+const allowedDomains = ['http://localhost:5173'];
 // Enabling use of security packages
 app.use(helmet());
-app.use(xss())
-app.use(cors());
+app.use(xss());
+
+app.use(cors({
+  origin: allowedDomains,
+  credentials: true
+}));
 
 // Parses JSON, form data, and cookies into request object
 app.use(express.json({limit: '20MB'}));
@@ -46,7 +52,7 @@ app.use(errorHandlerMiddleware);
 const start = () => {
   try {
     connectDB(process.env.MONGO_URI);
-    app.listen(3000, console.log('Server is up and running on port 3000...'));
+    app.listen(PORT, console.log('Server is up and running...'));
   } catch(err) {
     console.log(err);
   }

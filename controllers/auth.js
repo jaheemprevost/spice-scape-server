@@ -2,21 +2,16 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const { userCreationSchema, userLoginSchema } = require('../utils/joi');
 const { BadRequestError, NotFoundError, UnauthenticatedError } = require('../errors');
-const getRegister = async (req, res) => { 
-  res.send('This is the registration page.');
-}
-
-const getLogin = async (req, res) => {
-  res.send('This is the log in page');
-};
 
 // validates user input against Schema and saves user to database if valid.
 const registerUser = async (req, res) => {
   const {value, error} = userCreationSchema.validate(req.body);
 
-  if (error) { 
-    throw new BadRequestError(error);
+  if (error) {
+    const message = error.details[0].message
+    throw new BadRequestError(message);
   }
+
 
   const user = await User.create(value);
 
@@ -46,17 +41,18 @@ const loginUser = async (req, res) => {
   const accessToken = user.createAccessToken(); 
   const refreshToken = user.createRefreshToken(); 
 
-  res.cookie('refreshToken', refreshToken,  {httpOnly: true,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
+  res.cookie('refreshToken', refreshToken,  {httpOnly: false,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
 
   res.status(200).json({user: {
     name: user.username,
     profileImage: user.profileImage,
-    biography: user.biography
+    biography: user.biography,
+    userId: user._id
   }, accessToken}); 
 }
 
 const refreshAccessToken = async(req, res) => {
-  const { refreshToken } = req.cookies;
+  let { refreshToken } = req.cookies; 
 
   if (!refreshToken) {
     throw new UnauthenticatedError('Authentication failed');
@@ -71,24 +67,27 @@ const refreshAccessToken = async(req, res) => {
   }
 
   const accessToken = foundUser.createAccessToken(); 
-  
+  refreshToken = foundUser.createRefreshToken(); 
+
+  res.cookie('refreshToken', refreshToken,  {httpOnly: true,  sameSite: 'None',secure: false, maxAge: process.env.REFRESH_EXPIRES_IN});
+
   res.status(200).json({accessToken});
 };
 
 const logoutUser = async (req, res) => { 
   const cookies = req.cookies;
 
+  console.log(cookies);
   if (!cookies.refreshToken) { 
     return res.status(204).json({message: 'No cookie found'});
   }
 
   res.clearCookie('refreshToken', {httpOnly: true, secure: false,  sameSite: 'None'});
-  res.redirect('/api/v1/auth/login');
+
+  res.status(200).json({message: 'User successfully logged out'});
 };
 
 module.exports = {
-  getRegister,
-  getLogin,
   registerUser,
   loginUser,
   refreshAccessToken,
