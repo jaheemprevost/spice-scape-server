@@ -22,7 +22,7 @@ const app = express();
 
 
 // Whitelisted domains
-const allowedDomains = ['http://localhost:5173', 'https://spice-scape-client.vercel.app'];
+const allowedDomains = ['http://localhost:5173', 'https://spice-scape.netlify.app'];
 // Enabling use of security packages
 app.use(helmet());
 app.use(xss());

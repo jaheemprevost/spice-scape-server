@@ -42,7 +42,7 @@ const loginUser = async (req, res) => {
   const refreshToken = user.createRefreshToken(); 
 
   res.cookie('refreshToken', refreshToken,  {
-    httpOnly: false,  
+    httpOnly: true,  
     sameSite: 'None',
     secure: true, 
     maxAge: process.env.REFRESH_EXPIRES_IN,
