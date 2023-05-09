@@ -43,9 +43,8 @@ const loginUser = async (req, res) => {
 
   res.cookie('refreshToken', refreshToken,  {
     httpOnly: true,  
-    sameSite: 'None',
+    sameSite: 'none',
     secure: true, 
-    maxAge: process.env.REFRESH_EXPIRES_IN,
     domain: 'spice-scape-server.onrender.com'
   });
 
@@ -77,9 +76,8 @@ const refreshAccessToken = async(req, res) => {
 
   res.cookie('refreshToken', refreshToken,  {
     httpOnly: true,  
-    sameSite: 'None',
+    sameSite: 'none',
     secure: true, 
-    maxAge: process.env.REFRESH_EXPIRES_IN,
     domain: 'spice-scape-server.onrender.com'
   });
 
@@ -97,7 +95,7 @@ const logoutUser = async (req, res) => {
   res.clearCookie('refreshToken', {
     httpOnly: true, 
     secure: true,  
-    sameSite: 'None',
+    sameSite: 'none',
     domain: 'spice-scape-server.onrender.com'
   });
 
