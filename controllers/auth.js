@@ -46,7 +46,7 @@ const loginUser = async (req, res) => {
     sameSite: 'None',
     secure: true, 
     maxAge: process.env.REFRESH_EXPIRES_IN,
-    domain: 'https://.spice-scape-server.onrender.com'
+    domain: 'spice-scape-server.onrender.com'
   });
 
   res.status(200).json({user: {
@@ -80,7 +80,7 @@ const refreshAccessToken = async(req, res) => {
     sameSite: 'None',
     secure: true, 
     maxAge: process.env.REFRESH_EXPIRES_IN,
-    domain: 'https://.spice-scape-server.onrender.com'
+    domain: 'spice-scape-server.onrender.com'
   });
 
   res.status(200).json({accessToken});
@@ -98,7 +98,7 @@ const logoutUser = async (req, res) => {
     httpOnly: true, 
     secure: true,  
     sameSite: 'None',
-    domain: 'https://.spice-scape-server.onrender.com'
+    domain: 'spice-scape-server.onrender.com'
   });
 
   res.status(200).json({message: 'User successfully logged out'});
