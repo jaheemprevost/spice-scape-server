@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const { profileRevisionSchema } = require('../utils/joi');
 const { uploadImage, deleteImage } = require('../utils/cloudinary');
-const {NotFoundError, BadRequestError, UnauthenticatedError}= require('../errors');
+const { NotFoundError, BadRequestError, UnauthorizedError}= require('../errors');
 
 // Get specific profile associated with id in the request parameters.
 const getProfile = async (req, res) => {
@@ -68,9 +68,9 @@ const editProfile = async (req, res) => {
     throw new NotFoundError('This user does not exist.');
   }
 
-  // If the user profile's id doesn't match the current user's throw 401 not authorized error
+  // If the user profile's id doesn't match the current user's throw 403 forbidden error
   if (user._id.toString() !== userId) {
-    throw new UnauthenticatedError('You are not authorized to modify this profile')
+    throw new UnauthorizedError('You are not authorized to modify this profile')
   } 
 
   // Validates user input.
@@ -110,9 +110,9 @@ const deleteProfile = async (req, res) => {
     throw new NotFoundError('This user does not exist.');
   }
 
-  // If the user profile's id doesn't match the current user's throw 401 not authorized error
+  // If the user profile's id doesn't match the current user's throw 403 forbidden error
   if (user._id.toString() !== userId) {
-    throw new UnauthenticatedError('You are not authorized to modify this profile')
+    throw new UnauthorizedError('You are not authorized to modify this profile')
   }
 
   // Delete previous profile image stored on cloudinary.
@@ -124,7 +124,6 @@ const deleteProfile = async (req, res) => {
   await User.updateMany({},{$pull: {followedCooks: user._id}});
   await User.findOneAndDelete({_id: profileId});
 
-  res.clearCookie('token', {httpOnly: true, secure: false});
   res.status(200).json({message: 'Profile has been deleted'});
 };
 
@@ -203,9 +202,9 @@ const followUser = async (req, res) => {
     throw new NotFoundError('This user does not exist');
   } 
 
-  // If profile belongs to current user throw unauthorized error.
+  // If profile belongs to current user throw forbidden error.
   if (user._id.toString() === userId) { 
-    throw new UnauthenticatedError("You can't follow yourself!");
+    throw new UnauthorizedError("You can't follow yourself!");
   }
   
   // If current user is already in profiled user's follower list throw bad request error.
@@ -230,9 +229,9 @@ const unfollowUser = async (req, res) => {
     throw new NotFoundError('This user does not exist');
   } 
 
-  // If profile belongs to current user throw unauthorized error.
+  // If profile belongs to current user throw forbidden error.
   if (user._id.toString() === userId) { 
-    throw new UnauthenticatedError("You can't unfollow yourself!");
+    throw new UnauthorizedError("You can't unfollow yourself!");
   }
   
   // If current user is not in profiled user's follower list throw bad request error.

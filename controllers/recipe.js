@@ -1,4 +1,4 @@
-const {BadRequestError, NotFoundError, UnauthenticatedError} = require('../errors');
+const { BadRequestError, NotFoundError, UnauthorizedError } = require('../errors');
 const { uploadImage, deleteImage } = require('../utils/cloudinary');
 const {recipeCreationSchema, recipeRevisionSchema, commentCreationSchema, commentRevisionValidator} = require('../utils/joi');
 const Recipe = require('../models/recipe');
@@ -186,9 +186,9 @@ const editRecipeData = async (req, res) => {
       throw new NotFoundError('The recipe you are looking for does not exist.');
     }  
 
-    // If recipe wasn't created by current user throw 401 unauthorized error.
+    // If recipe wasn't created by current user throw 403 forbidden error.
     if (recipe.createdBy.toString() !== userId) { 
-      throw new UnauthenticatedError('You are not authorized to modify this recipe');
+      throw new UnauthorizedError('You are not authorized to modify this recipe');
     }
 
     // Validates user input
@@ -229,7 +229,7 @@ const editRecipeData = async (req, res) => {
   }
 
   if (comment.madeBy.toString() !== userId){
-    throw new UnauthenticatedError('You are not authorized to modify this comment');
+    throw new UnauthorizedError('You are not authorized to modify this comment');
   } 
 
   const {value, error} = commentRevisionValidator.validate(req.body.text);
@@ -271,9 +271,9 @@ const deleteRecipeData = async (req, res) => {
       throw new NotFoundError('The recipe you are looking for does not exist.');
     } 
 
-    // If recipe wasn't created by current user throw 401 unauthorized error.
+    // If recipe wasn't created by current user throw 401 forbidden error.
     if (recipe.createdBy.toString() !== userId) { 
-      throw new UnauthenticatedError('You are not authorized to modify this recipe');
+      throw new UnauthorizedError('You are not authorized to modify this recipe');
     }
 
     // Delete previous recipe image stored on cloudinary if it isn't the default.
@@ -297,9 +297,9 @@ const deleteRecipeData = async (req, res) => {
     throw new NotFoundError('This comment does not exist');
   }
 
-  // If comment wasn't created by current user throw 401 unauthorized error.
+  // If comment wasn't created by current user throw 403 forbidden error.
   if (comment.madeBy.toString() !== userId){
-    throw new UnauthenticatedError('You are not authorized to modify this comment');
+    throw new UnauthorizedError('You are not authorized to modify this comment');
   }   
 
   await Comment.findOneAndDelete({_id: commentId});
@@ -324,9 +324,9 @@ const favoriteRecipe = async (req, res) => {
     throw new NotFoundError('The recipe you are looking for does not exist.');
   } 
 
-  // If recipe was created by current user throw unauthorized error.
+  // If recipe was created by current user throw forbidden error.
   if (recipe.createdBy.toString() === userId) { 
-    throw new UnauthenticatedError("You can't favorite your own recipes!");
+    throw new UnauthorizedError("You can't favorite your own recipes!");
   }
 
   const user = await User.findOne({_id: userId});
@@ -352,9 +352,9 @@ const unfavoriteRecipe = async (req, res) => {
     throw new NotFoundError('The recipe you are looking for does not exist.');
   } 
 
-  // If recipe was created by current user throw unauthorized error.
+  // If recipe was created by current user throw forbidden error.
   if (recipe.createdBy.toString() === userId) { 
-    throw new UnauthenticatedError("You can't unfavorite your own recipes!");
+    throw new UnauthorizedError("You can't unfavorite your own recipes!");
   }
 
   const user = await User.findOne({_id: userId});
