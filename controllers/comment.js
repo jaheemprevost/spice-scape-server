@@ -1,8 +1,7 @@
 const Recipe = require('../models/recipe');
 const User = require('../models/user');
 const Comment = require('../models/comment');
-const {commentCreationSchema, commentRevisionValidator} = require('../utils/joi');
-const {BadRequestError, NotFoundError, UnauthenticatedError} = require('../errors');
+const {NotFoundError} = require('../errors');
 
 
 // Retrieves all comments from database and serves them.

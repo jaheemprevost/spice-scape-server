@@ -8,9 +8,7 @@ const {
   getFollowers,
   getFollowing,
   followUser,
-  unfollowUser,
-  favoriteRecipe,
-  unfavoriteRecipe
+  unfollowUser 
 } = require('../controllers/profile');
 
 router.route('/:profileId').get(getProfile).patch(editProfile).delete(deleteProfile);
