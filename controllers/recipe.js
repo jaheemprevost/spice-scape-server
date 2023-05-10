@@ -22,8 +22,7 @@ const getRecipes = async (req, res) => {
 
   const recipeTiles = recipes.map(recipe => {
     return {
-      recipeTitle: recipe.recipeTitle,
-      recipeImage: recipe.recipeImage.url,
+      recipeTitle: recipe.recipeTitle, 
       createdBy: recipe.createdBy._id,
       author: recipe.createdBy.username,
       authorImage: recipe.createdBy.profileImage.url,
@@ -54,8 +53,7 @@ const getRecipe = async (req, res) => {
   const user = await User.findOne({_id: userId});
 
   const isFavorite = user.favoriteRecipes.includes(recipeId);
-  const isOwnRecipe = user.recipes.includes(recipeId);
-  console.log(recipe);
+  const isOwnRecipe = user.recipes.includes(recipeId); 
   
   res.status(200).json({message: 'Success', recipe, isFavorite, isOwnRecipe});
 }; 
@@ -99,6 +97,38 @@ const getRecipeComments = async (req, res) => {
 
   res.status(200).json({comments});
 }
+
+const getFollowingFeed = async (req, res) => {
+  const { userId } = req.user;
+
+  /* Instructions on how to populate various fields and even nested fields inside of document. */
+  const populateOptions = {
+    path: 'createdBy',
+    select: 'username profileImage _id' 
+  };
+
+  const user = await User.findOne({_id: userId}).populate('followedCooks');
+  
+  const followedCooks = user.followedCooks.map(cook => cook._id);
+
+  const recipes = await Recipe.find({ createdBy: { $in: followedCooks} }).populate(populateOptions); 
+
+  if (recipes.length < 1) {
+    return res.status(200).json({message: "There aren't any recipes."}); 
+  }
+
+  const recipeTiles = recipes.map(recipe => {
+    return {
+      recipeTitle: recipe.recipeTitle, 
+      createdBy: recipe.createdBy._id,
+      author: recipe.createdBy.username,
+      authorImage: recipe.createdBy.profileImage.url,
+      recipeId: recipe._id
+    }
+  }); 
+  
+  res.status(200).json({recipeTiles});
+};
 
 // Validates user input data and creates document in database. 
 const createRecipe = async (req, res) => {
@@ -217,8 +247,7 @@ const editRecipeData = async (req, res) => {
     recipe.set(value);
     await recipe.save({new: true, runValidators: true});
     return res.status(200).json({message: 'Recipe successfully edited'});
-  } 
-
+  }  
 
   // Else edit the specified comment.
   const comment = await Comment.findOne({_id: commentId});
@@ -372,7 +401,8 @@ const unfavoriteRecipe = async (req, res) => {
 module.exports = {
   getRecipes, 
   getRecipe,
-  getRecipeComments, 
+  getRecipeComments,
+  getFollowingFeed, 
   createRecipe,
   createComment,
   editRecipeData,
