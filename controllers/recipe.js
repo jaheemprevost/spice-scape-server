@@ -55,7 +55,7 @@ const getRecipe = async (req, res) => {
   const isFavorite = user.favoriteRecipes.includes(recipeId);
   const isOwnRecipe = user.recipes.includes(recipeId); 
   
-  res.status(200).json({message: 'Success', recipe, isFavorite, isOwnRecipe});
+  res.status(200).json({recipe, isFavorite, isOwnRecipe});
 }; 
 
 const getRecipeComments = async (req, res) => {
@@ -80,7 +80,7 @@ const getRecipeComments = async (req, res) => {
   /* Populating and modifying document in such a way to get an array of comments with only the required fields. */  
   const comments = recipe.comments.map(comment => {
     return {
-      comment: comment.text,
+      text: comment.text,
       commentId: comment._id,
       userInfo: {
         id: comment.madeBy._id,
@@ -90,8 +90,7 @@ const getRecipeComments = async (req, res) => {
     };
   });
   
-  if (comments.length < 1) {
-    console.log(comments)
+  if (comments.length < 1) { 
     return res.status(200).json({message: 'This recipe has no comments'});
   }
 
@@ -108,6 +107,10 @@ const getFollowingFeed = async (req, res) => {
   };
 
   const user = await User.findOne({_id: userId}).populate('followedCooks');
+  
+  if (!user) {
+    throw new NotFoundError('This User does not exist');
+  }
   
   const followedCooks = user.followedCooks.map(cook => cook._id);
 
@@ -271,7 +274,7 @@ const editRecipeData = async (req, res) => {
 
   comment.set({text: value});
   const result = await comment.save({new: true, runValidators: true});
-  console.log(result);
+
   res.status(200).json({message: 'Comment successfully deleted'});
 };
 

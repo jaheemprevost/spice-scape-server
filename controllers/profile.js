@@ -8,38 +8,12 @@ const getProfile = async (req, res) => {
   const { userId } = req.user;
   const {profileId} = req.params;
 
-  const commentOptions = {
-    path: 'comments',
-    select: 'text madeBy',
-    populate: {
-      path: 'madeBy',
-      select: 'username profileImage _id'
-    } 
-  };
-
-  const user = await User.findOne({_id: profileId}).populate('recipes').populate(commentOptions);
+  const user = await User.findOne({_id: profileId});
 
   // If the user doesn't exist throw 404 not found error.
   if (!user) {
     throw new NotFoundError('This user does not exist.');
   }
-
-  const recipes = user.recipes.map(recipe => { 
-    return {
-      recipeTitle: recipe.recipeTitle,
-      recipeImage: recipe.recipeImage.url,
-      recipeId: recipe._id
-    }
-  });
-
-  const comments = user.comments.map(comment => {
-    return {
-      username: comment.madeBy.username,
-      profileImage: comment.madeBy.profileImage.url,
-      text: comment.text,
-      profileId: comment.madeBy._id 
-    }
-  });
 
   const userData = {
     username: user.username,
@@ -53,7 +27,7 @@ const getProfile = async (req, res) => {
 
   const isFollowing = currentUser.followedCooks.includes(profileId);
  
-  res.status(200).json({user: userData, recipes, comments, isFollowing});
+  res.status(200).json({user: userData, isFollowing});
 };
 
 // Edit the user profile associated with the specific request parameter.
@@ -126,6 +100,116 @@ const deleteProfile = async (req, res) => {
 
   res.status(200).json({message: 'Profile has been deleted'});
 };
+ 
+const getProfileRecipes = async (req, res) => { 
+  const { profileId } = req.params;
+ 
+  /* Instructions on how to populate various fields and even nested fields inside of document. */
+  const populateOptions = {
+    path: 'recipes',
+    populate: {
+      path: 'createdBy',
+      select: 'username profileImage _id'
+    } 
+  };
+
+  const user = await User.findOne({_id: profileId}).populate(populateOptions);
+  
+  if (!user) {
+    throw new NotFoundError('This User does not exist');
+  }
+
+  if (user.recipes.length < 1) {
+    return res.status(200).json({message: "This user has no recipes"}); 
+  }
+  
+  const recipeTiles = user.recipes.map(recipe => {
+    return {
+      recipeTitle: recipe.recipeTitle, 
+      createdBy: recipe.createdBy._id,
+      author: recipe.createdBy.username,
+      authorImage: recipe.createdBy.profileImage.url,
+      recipeId: recipe._id
+    }
+  }); 
+  
+  res.status(200).json({recipeTiles});
+};
+
+const getFavoriteRecipes = async (req, res) => {
+  const { profileId } = req.params;
+ 
+  /* Instructions on how to populate various fields and even nested fields inside of document. */
+  const populateOptions = {
+    path: 'favoriteRecipes',
+    populate: {
+      path: 'createdBy',
+      select: 'username profileImage _id'
+    } 
+  };
+
+  const user = await User.findOne({_id: profileId}).populate(populateOptions);
+
+  if (!user) {
+    throw new NotFoundError('This User does not exist');
+  }
+
+  if (user.favoriteRecipes.length < 1) {
+    return res.status(200).json({message: "This user has no favorite recipes"}); 
+  }
+  
+  const recipeTiles = user.favoriteRecipes.map(recipe => {
+    return {
+      recipeTitle: recipe.recipeTitle, 
+      createdBy: recipe.createdBy._id,
+      author: recipe.createdBy.username,
+      authorImage: recipe.createdBy.profileImage.url,
+      recipeId: recipe._id
+    }
+  }); 
+  
+  res.status(200).json({recipeTiles});
+};
+
+const getProfileComments = async (req, res) => {
+  const { profileId } = req.params;
+ 
+  /* Instructions on how to populate various fields and even nested fields inside of document. */
+  const populateOptions = {
+    path: 'comments',
+    select: 'text madeBy parentPost',
+    populate: {
+      path: 'madeBy',
+      select: 'username profileImage _id' 
+    }
+  };
+
+  const user = await User.findOne({_id: profileId}).populate(populateOptions);
+
+  if (!user) {
+    throw new NotFoundError('This User does not exist');
+  }
+
+  /* Populating and modifying document in such a way to get an array of comments with only the required fields. */  
+  const comments = user.comments.map(comment => {
+    return {
+      text: comment.text,
+      commentId: comment._id,
+      parentPost: comment.parentPost,
+      userInfo: {
+        id: comment.madeBy._id,
+        username: comment.madeBy.username,
+        profileImage: comment.madeBy.profileImage.url
+      }
+    };
+  });
+  
+  if (comments.length < 1) { 
+    return res.status(200).json({message: 'This user has no comments'});
+  }
+
+  res.status(200).json({comments});
+}
 
 const getFollowers = async (req, res) => { 
   const { profileId } = req.params;
@@ -147,16 +231,16 @@ const getFollowers = async (req, res) => {
   const followers = user.followers.map(follower => {
     return {
       username: follower.username,
-      profileImage: follower.profileImage,
+      profileImage: follower.profileImage.url,
       id: follower._id
     };
   });
 
   if (followers.length < 1) {
     return res.status(200).json({message: 'This user has no followers'});
-  } else {
-    res.status(200).json({followers});
-  }
+  } 
+
+  res.status(200).json({followers});
 }
 
 const getFollowing = async (req, res) => { 
@@ -179,16 +263,16 @@ const getFollowing = async (req, res) => {
   const followedCooks = user.followedCooks.map(cook => {
     return {
       username: cook.username,
-      profileImage: cook.profileImage,
+      profileImage: cook.profileImage.url,
       id: cook._id
     };
   });
 
   if (followedCooks.length < 1) {
     return res.status(200).json({message: "This user isn't following anyone"});
-  } else {
-    res.status(200).json({followedCooks});
-  }
+  } 
+  
+  res.status(200).json({followedCooks});
 };
 
 const followUser = async (req, res) => { 
@@ -249,6 +333,9 @@ module.exports = {
   getProfile,
   editProfile,
   deleteProfile,
+  getProfileRecipes,
+  getFavoriteRecipes,
+  getProfileComments,
   getFollowers,
   getFollowing,
   followUser,

@@ -51,7 +51,7 @@ userSchema.pre('save', async function() {
 });
 
 userSchema.methods.createAccessToken = function() {
-  return jwt.sign({userId: this._id, username: this.username}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: process.env.ACCESS_EXPIRES_IN});
+  return jwt.sign({userId: this._id, username: this.username}, process.env.TOKEN_SECRET, {expiresIn: process.env.EXPIRES_IN});
 };
 
 userSchema.methods.comparePassword = async function(inputtedPassword) {
