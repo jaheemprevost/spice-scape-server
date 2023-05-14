@@ -38,6 +38,10 @@ app.use(cookieParser());
 
 // routes
 
+app.get('/', (req, res) => {
+  res.send('Spice Scape API');
+});
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', authenticationMiddleware, profileRoutes);
 app.use('/api/v1/recipes', authenticationMiddleware,recipeRoutes);
