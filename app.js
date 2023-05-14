@@ -1,7 +1,6 @@
 require('dotenv').config();
 require('express-async-errors');
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const connectDB = require('./db/connect');
 const authenticationMiddleware = require('./middleware/authentication');
 const errorHandlerMiddleware = require('./middleware/error-handler');

@@ -275,7 +275,7 @@ const editRecipeData = async (req, res) => {
   comment.set({text: value});
   const result = await comment.save({new: true, runValidators: true});
 
-  res.status(200).json({message: 'Comment successfully deleted'});
+  res.status(200).json({message: 'Comment successfully edited'});
 };
 
 
